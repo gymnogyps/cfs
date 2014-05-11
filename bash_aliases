@@ -1,22 +1,19 @@
 # $Id$
 
+# File    : bash_aliases
+# Purpose : Shell configuration file. 
+# Date    : 5/12/14   
+# GUFI: 
 # 536e0636c00231.84551647:20140512070900
 
 alias via="vim  /root/bash_aliases"
 alias a="source /root/.bashrc; alias"
-alias newhome="HOME=$PWD"
-
-alias connie="cd /home/connie; HOME=/home/connie; . /home/connie/.bashrc"
-
 
 BLANK80="\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040"
 BLANK80="${BLANK80}${BLANK80}${BLANK80}${BLANK80}"
-
 LEFTMAR="\\040\\040\\040\\040\\040\\040\\040\\040\\040"
 
-
 function stow () {
-
 
 	# Place the file in the local repository
 	ci .RCS/${1},v ${1}
@@ -28,7 +25,6 @@ function stow () {
 }
 
 function retrieve () {
-
 	
 	ci .RCS/${1},v ${1}
 	co -l  .RCS/${1},v ${1}
@@ -38,7 +34,6 @@ function retrieve () {
 }
 
 function cfs () {
-
 
 	IFS=$'\t\n'
 	DIRECTORY_TREE=(`ls /home/`)
