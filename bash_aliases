@@ -58,4 +58,52 @@ function cfs () {
 	fi
 }
 
+
+TEST_DATA=( [0]="Menu Item 0" [1]="Menu Item 1" )
+
+function cfs_select () {
+
+
+	# echo ${@}
+
+	IFS=$'\t\n'
+	# DIRECTORY_TREE=(`ls /home/`)
+	#
+	SELECTIONS=( ${@} )
+	SELECTION_PROCESS='INCOMPLETE'
+
+
+	while [[ $SELECTION_PROCESS == 'INCOMPLETE' ]]; do 
+		index=0
+	
+		for directory in ${SELECTIONS[@]}; do
+
+			echo -e "${LEFTMAR}\\033[1;44m\\040${BLANK80}\\033[1;0m\\033[1A"
+			echo -e "${LEFTMAR}\\033[1;44m$index  $directory\\033[1;0m"
+
+			index=$(($index+1))
+		done
+
+
+		read -p"Make a Selection: " selection
+
+		if [[ $selection -ge $BASE ]] && [[ $selection -le $index ]]; then
+
+			echo "DEBUG: selection within limits"
+
+			SELECTION_PROCESS='COMPLETE'
+			echo ${SELECTIONS[$selection]}
+		fi
+	done
+	IFS=$' \t\n'dd
+}
+
+function sandbox_function () {
+
+	# echo "Test Data"  ${TEST_DATA[@]}
+
+	cfs_select "${TEST_DATA[@]}"
+}
+
+#
 # $Log$
