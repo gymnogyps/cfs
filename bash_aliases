@@ -6,84 +6,96 @@
 # GUFI: 
 # 536e0636c00231.84551647:20140512070900
 
-alias via="vim  /root/bash_aliases"
-alias a="source /root/.bashrc; alias"
+BUGGY=1
 
-BLANK80="\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040\\040"
-BLANK80="${BLANK80}${BLANK80}${BLANK80}${BLANK80}"
-LEFTMAR="\\040\\040\\040\\040\\040\\040\\040\\040\\040"
+CFS_SELECTION=""
+LINELENGTH=80
+LEFTMARGINLENGTH=8
+
+LOCALDIR_REPO='.RCS'
+FILESYSTEM_REPO='/var/cache/cfs/rcs'
+
+for (( x = 0 ; $x < $LINELENGTH; x++ )) ; do
+	BLANKLINE=${BLANKLINE}"\\040"
+done
+
+for (( x = 0 ; $x < $LEFTMARGINLENGTH; x++ )) ; do
+	LEFTMARGIN=${LEFTMARGIN}"\\040"
+done
 
 function stow () {
 
-	# Place the file in the local repository
-	ci .RCS/${1},v ${1}
-	co -l  .RCS/${1},v ${1}
+	for REPODIR in $LOCALDIR_REPO $FILESYSTEM_REPO; do 
+		if [ -d $REPODIR ]; then
 	
-	# Place the file in the user account repository
-	# ci ~/.cfs/RCS/${1},v ${1}
-	# co ~/.cfs/RCS/${1},v ${1}
+			if [ $REPODIR != $LOCALDIR_REPO ]; then	
+				DESTDIR="$REPODIR$PWD"
+			else
+				DESTDIR=$LOCALDIR_REPO
+			fi
+
+			(($BUGGY)) && {
+				echo "--+-*-+--"
+				echo "REPO: "$REPODIR
+				echo "COMMAND LINE: "$1
+				echo "Destination: $DESTDIR"
+				echo "++-*-++"
+			}
+			if ! [ -d "$DESTDIR" ]; then
+
+				(($BUGGY)) && echo "DEBUG: $DESTDIR being created"
+				mkdir -p $DESTDIR
+			else
+				(($BUGGY)) && echo  "DEBUG: $DESTDIR appears intact"
+			fi
+
+			# cp $1 temp 
+			ci $DESTDIR/${1},v ${1}
+			co -l  $DESTDIR/${1},v ${1}
+			# cp temp $1
+		fi
+	
+	done
 }
 
 function retrieve () {
 	
-	ci .RCS/${1},v ${1}
-	co -l  .RCS/${1},v ${1}
+	if [ -f $LOCALREPO ]; then
+		ci .RCS/${1},v ${1}
+		co -l  .RCS/${1},v ${1}
+	fi
 	
 	# ci ~/.cfs/RCS/${1},v ${1}
 	# co ~/.cfs/RCS/${1},v ${1}
 }
 
-function cfs () {
-
-	IFS=$'\t\n'
-	DIRECTORY_TREE=(`ls /home/`)
-
-	index=0
-	
-	for directory in ${DIRECTORY_TREE[@]}; do
-
-		echo -e "${LEFTMAR}\\033[1;44m\\040${BLANK80}\\033[1;0m\\033[1A"
-		echo -e "${LEFTMAR}\\033[1;44m$index  $directory\\033[1;0m"
-
-		index=$(($index+1))
-	done
-
-	IFS=$' \t\n'
-
-	read -p"Make a Selection" selection
-
-	if [[ $selection -ge $BASE ]] || [[ $selection -le $index ]]; then
-
-		echo ${DIRECTORY_TREE[$selection]}
-	fi
-}
-
-
-TEST_DATA=( [0]="Menu Item 0" [1]="Menu Item 1" )
-
 function cfs_select () {
-
 
 	# echo ${@}
 
 	IFS=$'\t\n'
-	# DIRECTORY_TREE=(`ls /home/`)
-	#
-	SELECTIONS=( ${@} )
+	
+	SELECTIONS=( 'Exit' ${@} )
+	LAST_ASSIGNED_INDEX=${#SELECTIONS[@]}
+	
+
 	SELECTION_PROCESS='INCOMPLETE'
 
 
 	while [[ $SELECTION_PROCESS == 'INCOMPLETE' ]]; do 
 		index=0
 	
+			echo -e "${LEFTMARGIN}\\033[1;44m\\040${BLANKLINE}\\033[1;0m"
 		for directory in ${SELECTIONS[@]}; do
 
-			echo -e "${LEFTMAR}\\033[1;44m\\040${BLANK80}\\033[1;0m\\033[1A"
-			echo -e "${LEFTMAR}\\033[1;44m$index  $directory\\033[1;0m"
+			echo -e "${LEFTMARGIN}\\033[1;44m\\040${BLANKLINE}\\033[1;0m\\033[1A"
+			echo -e "${LEFTMARGIN}\\033[1;44;36m $index  \\033[1;37m$directory\\033[1;0m"
 
 			index=$(($index+1))
 		done
 
+			echo -e "${LEFTMARGIN}\\033[1;44m\\040${BLANKLINE}\\033[1;0m"
+			echo -en "${LEFTMARGIN}"
 
 		read -p"Make a Selection: " selection
 
@@ -92,10 +104,14 @@ function cfs_select () {
 			echo "DEBUG: selection within limits"
 
 			SELECTION_PROCESS='COMPLETE'
-			echo ${SELECTIONS[$selection]}
+			CFS_SELECTION=${SELECTIONS[$selection]}
+		fi
+
+		if [ $selection -eq $LAST_ASSIGNED_INDEX ]; then
+			SELECTION_PROECESS='COMPLETE'
 		fi
 	done
-	IFS=$' \t\n'dd
+	IFS=$' \t\n'
 }
 
 function sandbox_function () {
